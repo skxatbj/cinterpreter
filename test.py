@@ -1,3 +1,6 @@
+import re
+
+
 INTEGER, PLUS, EOF = 'INTEGER', 'PLUS', 'EOF'
 
 
@@ -22,6 +25,8 @@ class Interpreter(object):
         self.pos = 0
         self.current_token = None
 
+        self.match = '[0-9]+'
+
     def error(self):
         raise Exception('Error parsing input')
 
@@ -31,16 +36,21 @@ class Interpreter(object):
         if self.pos > len(text) - 1:
             return Token(EOF, None)
 
-        current_char = text[self.pos]
+        ret = re.search(self.match, text[self.pos:])
 
-        if current_char.isdigit():
-            token = Token(INTEGER, int(current_char))
-            self.pos += 1
+        if ret is None:
+            self.error()
+
+        if ret.group(0).isdigit():
+            token = Token(INTEGER, int(ret.group(0)))
+            self.pos = ret.end()
+            self.match = '\+'
             return token
 
-        if current_char == '+':
-            token = Token(PLUS, current_char)
-            self.pos += 1
+        if ret.group(0) == '+':
+            token = Token(PLUS, ret.group(0))
+            self.pos = self.pos + ret.end()
+            self.match = '[0-9]+'
             return token
 
         self.error()
